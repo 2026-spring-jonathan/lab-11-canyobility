@@ -1,80 +1,49 @@
 @page "/TwistyMaze"
+@using Microsoft.Extensions.WebEncoders.Testing
 @using Microsoft.VisualBasic
 @using labyrinth
+@using nifty_labyrinth;
 @using MermaidJS.Blazor
 
 <PageTitle>Basic Maze Visualizer</PageTitle>
+<body>
+    <div>
+        <h1>Enter your name</h1>
+        <input @bind="userName" />
+        <button @onclick="generateMaze">Generate Basic Maze</button>
+    </div>   
 
-<h1>Enter your name</h1>
-<input @bind="userName" />
-<button @onclick="generateMaze">Generate Basic Maze</button>
+    <div>
+        <h2>Verify Path</h2>
+        <input @bind="pathToVerify" />
+        <button @onclick="verifyPath">Verify Path</button>
+    </div>
 
-<MermaidDiagram Definition=@mazeBody />
+    <div>
+        <h2>Preview Results.</h2>
+        <MermaidDiagram Definition=@mazeBody />
+    </div> 
+</body>
+
+
+
 
 @code
 {
     string userName;
     string mazeBody;
-    IEnumerable<NodeLink> links =[];
+    string pathToVerify;
+    bool isPathValid;
+    IEnumerable<NodeLink> links;
 
-    void generateMaze()
+    private void generateMaze()
     {
-        MazeCell startLocation = MazeUtilities.twistyMazeFor(userName);
-        links = exploreMaze(startLocation);        
-        mazeBody = "graph TD\n";
-        mazeBody += string.Join(separator: "\n", links.Select(l => l.Label));
+        (var newLinks, mazeBody, MazeCell start) = MazeGenerator.GenerateMaze(userName, isTwisty: true);
+        links = newLinks;
     }
 
-    IEnumerable<NodeLink> exploreMaze(MazeCell start)
+    private void verifyPath()
     {
-        List<NodeLink> linksTest = new List<NodeLink>();
-        exploreNode(start, linksTest);
-        return linksTest;
-    }
-
-    void exploreNode(MazeCell current, List<NodeLink> links)
-    {
-        if (current is null)
-        { return; }
-
-        if (current.North is not null)
-        {
-            var northLink = new NodeLink(current, "North", current.North);
-            if (!links.Contains(northLink))
-            {
-                links.Add(northLink);
-                exploreNode(current.North, links);
-            }
-        }
-
-        if (current.East is not null)
-        {
-            var eastLink = new NodeLink(current, "North", current.East);
-            if (!links.Contains(eastLink))
-            {
-                links.Add(eastLink);
-                exploreNode(current.East, links);
-            }
-        }
-    
-        if (current.South is not null)
-        {
-            var southLink = new NodeLink(current, "North", current.South);
-            if (!links.Contains(southLink))
-            {
-                links.Add(southLink);
-                exploreNode(current.South, links);
-            }
-        }
-    
-        if (current.West is not null)
-        {
-            var westLink = new NodeLink(current, "North", current.West);
-            if (!links.Contains(westLink))
-            {
-                links.Add(westLink);
-                exploreNode(current.West, links);
-            }
-        }
+        isPathValid = labyrinth.MazeUtilities.isPathToFreedom(null, pathToVerify);
     }
 }
